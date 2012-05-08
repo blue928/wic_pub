@@ -75,7 +75,6 @@ function wic_pub_node_info() {
       'name' => t('WIC publication'),
       'base' => 'wic_pub',
       'description' => t('<em>WIC publications</em> are used to generate the publications order form, but currently are not published by default.'),
-			'has_title' => FALSE,
     ),
   );
 }
@@ -142,6 +141,11 @@ function wic_pub_delete($node) {
  * Implements hook_form()
  */
 function wic_pub_form($node, &$form_state) {
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Publication title'),
+    '#description' => t('A descriptive name of the publication for identifying it in the content management admin page.  This is not the description on the order form.')
+  );
   $form['wic_pub_order_number'] = array(
     '#type' => 'textfield',
     '#title' => t('Order number'),
@@ -154,6 +158,7 @@ function wic_pub_form($node, &$form_state) {
   $form['wic_pub_description'] = array(
     '#type' => 'textfield',
 		'#title' => t('Description'),
+		'#description' => t('The publication description displayed on the order form'),
 		'#maxlength' => 60,
 		'#required' => TRUE,
 		'#weight' => 1,
