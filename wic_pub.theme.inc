@@ -9,96 +9,15 @@
  * http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html/7
  */
 
-/**
- * Returns HTML for the WIC publication full node view
- */
-function theme_wic_pub_full_view($variables) {
-	$node = $variables['node'];
-
-	if (node_is_page($node)) {
-		$breadcrumb = array();
-		$breadcrumb[] = l(t('Home'), NULL);
-		$breadcrumb[] = l(t('WIC Publications'), 'wic-publications');
-		$breadcrumb[] = $node->title;
-		drupal_set_breadcrumb($breadcrumb);
-	}
-
-  if ($node->wic_pub_order_number) {
-	  $node->content['wic_pub_order_number'] = array(
-      '#markup' => theme('wic_pub_order_number', array('order_number' => $node->wic_pub_order_number)),
-			'#weight' => 0,
-		);
-	}
-  if ($node->wic_pub_description) {
-	  $node->content['wic_pub_description'] = array(
-      '#markup' => theme('wic_pub_description', array(
-			  'description' => $node->wic_pub_description,
-			  'in_stock' => $node->wic_pub_in_stock,
-				'quantity_max' => $node->wic_pub_quantity_max,
-			)),
-			'#weight' => 1,
-		);
-	}
-}
-
-/**
- * Returns HTML for the WIC publication teaser node view
- */
-function theme_wic_pub_teaser_view($variables) {
-	$node = $variables['node'];
-
-  if ($node->wic_pub_description) {
-	  $node->content['wic_pub_description'] = array(
-      '#markup' => theme('wic_pub_description', array('description' => $node->wic_pub_description)),
-			'#weight' => 0,
-		);
-	}
-}
-
-/**
- * Returns HTML for the Order number field
- */
-function theme_wic_pub_order_number($variables) {
-	$order_number = $variables['order_number'];
-	return "<div class='wic-pub-field wic-pub-order-number'>
-	  <h3 class='field-label'>" . t('Order number') . ":</h3>
-		<p class='field-item'>$order_number</p>
-		</div>\n";
-}
-
-/**
- * Returns HTML for the Description field
- */
-function theme_wic_pub_description($variables) {
-	$description = $variables['description'];
-	$in_stock = $variables['in_stock'];
-	$quantity_max = $variables['quantity_max'];
-	$output = "<div class='wic-pub-field wic-pub-description'>
-	  <h3 class='field-label'>" . t('Description') . ":</h3>\n";
-	$output .= "<p class='field-item'>";
-	if (!$in_stock) {
-	  $output .= "<span class='line-through'>$description</span> <em>currently out of stock</em>";
-	}
-	elseif ($quantity_max) {
-		$output .= "$description <strong>(Limit of $quantity_max)</strong>";
-	}
-	else {
-		$output .= $description;
-	}
-	$output .=  "</p>
-		</div>\n";
-	return $output;
-}
-
 function theme_wic_pub_order_form_description($variables) {
 	$description = $variables['description'];
 	$in_stock = $variables['in_stock'];
-	$quantity_max = $variables['quantity_max'];
+	$max_quantity = $variables['max_quantity'];
 	if (!$in_stock) {
 	  $output = "<span class='line-through'>$description</span> <em>currently out of stock</em>";
 	}
-	elseif ($quantity_max) {
-		$output = "$description <strong>(Limit of $quantity_max)</strong>";
+	elseif ($max_quantity) {
+		$output = "$description <strong>(Limit of $max_quantity)</strong>";
 	}
 	else {
 		$output = $description;

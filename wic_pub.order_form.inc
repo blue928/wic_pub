@@ -94,6 +94,17 @@ function wic_pub_order_form($form, &$form_state) {
 function wic_pub_order_form_set(&$form, &$form_state, $group, $nids) {
 	foreach ($nids as $nid) {
 		$node = node_load($nid);
+    // Get the field values.
+    $order_numbers = field_get_items('node', $node, 'wic_pub_order_number');
+    $order_number = field_view_value('node', $node, 'wic_pub_order_number', $order_numbers[0]);
+    $descriptions = field_get_items('node', $node, 'wic_pub_description');
+    $description = field_view_value('node', $node, 'wic_pub_description', $descriptions[0]);
+    $in_stocks = field_get_items('node', $node, 'wic_pub_in_stock');
+    $in_stock = (bool) $in_stocks[0]['value'];
+    $max_quantities = field_get_items('node', $node, 'wic_pub_max_quantity');
+    $max_quantity = field_view_value('node', $node, 'wic_pub_max_quantity', $max_quantities[0]);
+    $max_quantity = (int) $max_quantity['#markup'];
+
 	  $form['items'][$group][$node->nid]['#tree'] = TRUE;
 		$form['items'][$group][$node->nid]['quantity'] = array(
 			'#type' => 'textfield',
@@ -102,34 +113,34 @@ function wic_pub_order_form_set(&$form, &$form_state, $group, $nids) {
 			'#size' => 3,
 			'#maxlength' => 3,
 			// Disable the quantity field if the item is not in stock.
-			'#disabled' => !$node->wic_pub_in_stock,
+			'#disabled' => !$in_stock,
 			'#default_value' => empty($form_state['values'][$node->nid]['quantity']) ? '' : $form_state['values'][$node->nid]['quantity'],
 		);
 		$form['items'][$group][$node->nid]['printed_order_number'] = array(
-		  '#markup' => $node->wic_pub_order_number,
+		  '#markup' => $order_number['#markup'],
 		);
 		$form['items'][$group][$node->nid]['printed_description'] = array(
 		  '#markup' => theme('wic_pub_order_form_description', array(
-			  'description' => $node->wic_pub_description,
-				'in_stock' => $node->wic_pub_in_stock,
-				'quantity_max' => $node->wic_pub_quantity_max,
+			  'description' => $description['#markup'],
+				'in_stock' => $in_stock,
+				'max_quantity' => $max_quantity,
 			)),
 		);
 		$form['items'][$group][$node->nid]['order_number'] = array(
 			'#type' => 'value',
-			'#value' => $node->wic_pub_order_number,
+			'#value' => $order_number['#markup'],
 		);
 		$form['items'][$group][$node->nid]['description'] = array(
 			'#type' => 'value',
-			'#value' => $node->wic_pub_description,
+			'#value' => $description['#markup'],
 		);
 		$form['items'][$group][$node->nid]['in_stock'] = array(
 			'#type' => 'value',
-			'#value' => $node->wic_pub_in_stock,
+			'#value' => $in_stock,
 		);
-		$form['items'][$group][$node->nid]['quantity_max'] = array(
+		$form['items'][$group][$node->nid]['max_quantity'] = array(
 			'#type' => 'value',
-			'#value' => $node->wic_pub_quantity_max,
+			'#value' => $max_quantity,
 		);
 	}
 }
@@ -200,7 +211,7 @@ function wic_pub_next_validate($form, &$form_state) {
 			form_set_error("$nid][quantity", t("The quantity you enter must be an integer."));
 			continue;
 		}
-		elseif ($item['quantity_max'] > 0 && $item['quantity'] > $item['quantity_max']) {
+		elseif ($item['max_quantity'] > 0 && $item['quantity'] > $item['max_quantity']) {
 			form_set_error("$nid][quantity", t('The quantity you entered is higher than the maximum.  Refer to the item description for the maximum quantity.'));
 			continue;
 		}

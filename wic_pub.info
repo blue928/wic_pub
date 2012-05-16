@@ -1,12 +1,13 @@
-; $Id$
 name = Publication Order Form
 description = Creates the WIC publications node type and an ordering form
 core = 7.x
 package = WIC
+version = 7.x-1.0-beta
 
+dependencies[] = list
+dependencies[] = number
+dependencies[] = options
+dependencies[] = taxonomy
 dependencies[] = wic
-
-files[] = wic_pub.install
-files[] = wic_pub.module
 
 stylesheets[all][] = wic_pub.css
