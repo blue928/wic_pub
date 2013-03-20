@@ -15,8 +15,8 @@ function wic_pub_menu() {
     'publication-order-form' => array(
       'title' => 'WIC publications order form',
       'description' => 'Order publications from WIC',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('wic_pub_order_form'),
+      'page callback' => 'wic_pub_order_form',
+      'page arguments' => array(1),
       'access arguments' => array('access content'),
       'file' => 'wic_pub.order_form.inc',
     ),
@@ -37,21 +37,13 @@ function wic_pub_menu() {
  */
 function wic_pub_theme($existing, $type, $theme, $path) {
   return array(
-    'wic_pub_full_view' => array(
-      'variables' => array('node' => NULL),
-      'file' => 'wic_pub.theme.inc',
-    ),
-    'wic_pub_description' => array(
-      'variables' => array('description' => NULL, 'in_stock' => NULL, 'quantity_max' => NULL),
-      'file' => 'wic_pub.theme.inc',
-    ),
     'wic_pub_order_form_description' => array(
       'variables' => array('description' => NULL, 'in_stock' => NULL, 'quantity_max' => NULL),
-      'file' => 'wic_pub.theme.inc',
+      'file' => 'wic_pub.order_form.inc',
     ),
-    'wic_pub_order_form' => array(
+    'wic_pub_order_form_step' => array(
       'render element' => 'form',
-      'file' => 'wic_pub.theme.inc',
+      'file' => 'wic_pub.order_form.inc',
     ),
   );
 }

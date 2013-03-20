@@ -4,6 +4,7 @@ core = 7.x
 package = WIC
 version = 7.x-1.0-beta
 
+dependencies[] = ctools
 dependencies[] = list
 dependencies[] = number
 dependencies[] = options

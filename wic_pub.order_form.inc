@@ -15,81 +15,108 @@
  * terms taxonomy. Top-level terms are rendered as pages. Second-level
  * terms are rendered as sub-headings on the page.
  */
-function wic_pub_order_form($form, &$form_state) {
+function wic_pub_order_form($step = NULL) {
 	// Check to make sure we can find the publications vocabulary ID.
 	if (!($vid = variable_get('wic_pub_of_vid', NULL))) {
 		drupal_set_message(t('The WIC publications order form cannot be created.  Please contact a system administrator.'), 'error');
 		return NULL;
 	}
 
-	// Set the current page number.  The submit functions will increment/decrement the value.
-	$form_state['page_num'] = empty($form_state['page_num']) ? 1 : $form_state['page_num'];
-	// Get the top-level taxonomy terms.  These are our form pages.
-	$pages = taxonomy_get_tree($vid, 0, 1);
-	if ($form_state['page_num'] <= count($pages)) {
-		// Default to the first page.
-		$page = reset($pages);
-		// Advance the page to the current page.
-		for ($i = 1; $i < $form_state['page_num']; $i++) {
-			$page = next($pages);
-		}
-		// Set the page title to the name of the top-level taxonomy term.
-		drupal_set_title(t($page->name));
-		// Get the second-level terms under the page.  These are sub-headings.
-		$headings = taxonomy_get_tree($vid, $page->tid, 1);
-		
-		// Get nodes tagged with the page term.
-		$nids = taxonomy_select_nodes($page->tid, FALSE, FALSE, array('t.created' => 'ASC'));
-		if (!empty($nids)) {
-			// Construct form elements from the nodes. Add the 'items' array so that
-			// element_children() in the theme function doesn't return form metadata
-			// elements as headings.
-			wic_pub_order_form_set($form, $form_state, 'no_heading', $nids);
-		}
-		foreach ($headings as $heading) {
-			$nids = taxonomy_select_nodes($heading->tid, FALSE, FALSE, array('t.created' => 'ASC'));
-			if (!empty($nids)) {
-				wic_pub_order_form_set($form, $form_state, $heading->name, $nids);
-			}
-		}
-	}
-	// The page number is greater than the number of array items, display the
-	// WIC clinic info form.
-	else {
-		drupal_set_title(t('WIC clinic information'));
-		wic_pub_order_form_last($form, $form_state);
-	}
-	// Show the back button if we're not on the first page of the form.
-	if ($form_state['page_num'] > 1) {
-		$form['back'] = array(
-			'#type' => 'submit',
-			'#value' => t('Back'),
-			// Only validate on "Next", but don't limit validation errors on "Back"
-			// or the form values won't be saved.
-			'#submit' => array('wic_pub_back_submit'),
-		);
-	}
-	// Show the next button if we're not on the last page of the form.
-	if ($form_state['page_num'] <= count($pages)) {
-		$form['next'] = array(
-			'#type' => 'submit',
-			'#value' => t('Next'),
-			'#validate' => array('wic_pub_next_validate'),
-			'#submit' => array('wic_pub_next_submit'),
-		);
-	}
-	else {
-		$form['submit'] = array(
-			'#type' => 'submit',
-			'#value' => t('Submit'),
-			'#submit' => array('wic_pub_order_form_submit'),
-		);
-	}
-	return $form;
+  // Include required ctools files.
+  ctools_include('wizard');
+  ctools_include('object-cache');
+
+	// Define the steps of the form from the taxonomy tree.
+  $terms = taxonomy_get_tree($vid, 0, 1);
+  $order = array();
+  $forms = array();
+  foreach ($terms as $term) {
+    $order[$term->tid] = t('@name', array('@name' => $term->name));
+    $forms[$term->tid] = array(
+      'form id' => 'wic_pub_order_form_step',
+    );
+  }
+	$order['clinic-info'] = t('WIC clinic information');
+	$forms['clinic-info'] = array(
+    'form id' => 'wic_pub_order_form_clinic_info'
+  );
+
+  // Set the tid for the first step.
+  if (empty($step)) {
+    reset($order);
+    $step = key($order);
+
+    // Clear the Ctool cache object.
+    wic_pub_order_form_clear_page_cache('order');
+  }
+
+  $form_info = array(
+    // Specify unique form id for this form.
+    'id' => 'wic_pub_order_form',
+    // Specify the path for this form.
+    'path' => 'publication-order-form/%step',
+    // Show the Back button.
+    'show back' => TRUE,
+    // Show the Cancel button.
+    'show cancel' => TRUE,
+    // Callback to use when the 'next' button is clicked.
+    'next callback' => 'wic_pub_order_form_next',
+    // Callback to use when entire form is completed.
+    'finish callback' => 'wic_pub_order_form_finish',
+    // Callback to use when user cancels wizard.
+    'cancel callback' => 'wic_pub_order_form_cancel',
+    // Specify the order of the child forms and their page titles.
+    'order' => $order,
+    // Define the child forms.
+    'forms' => $forms,
+  );
+
+  // Make cached data available within each step's $form_state array.
+  $form_state['order_object'] = wic_pub_order_form_get_page_cache('order');
+
+  // Pass the vid and tid of the current step to the form.
+  $form_state['vid'] = $vid;
+  $form_state['tid'] = $step;
+
+  // Return the form as a Ctools multi-step form.
+  $output = ctools_wizard_multistep_form($form_info, $step, $form_state);
+
+  return $output;
 }
 
 /**
- * Form builder: publication order form item selection pages
+ * Form builder: Publication order form item selection pages.
+ */
+function wic_pub_order_form_step($form, &$form_state) {
+  $vid = $form_state['vid'];
+  $tid = $form_state['tid'];
+
+  // Get the second-level terms under the page.  These are sub-headings.
+  $headings = taxonomy_get_tree($vid, $tid, 1);
+
+  // Get nodes tagged with the page term.
+  $nids = taxonomy_select_nodes($tid, FALSE, FALSE, array('t.created' => 'ASC'));
+  if (!empty($nids)) {
+    // Construct form elements from the nodes. Add the 'items' array so that
+    // element_children() in the theme function doesn't return form metadata
+    // elements as headings.
+    wic_pub_order_form_set($form, $form_state, 'no_heading', $nids);
+  }
+  foreach ($headings as $heading) {
+    $nids = taxonomy_select_nodes($heading->tid, FALSE, FALSE, array('t.created' => 'ASC'));
+    if (!empty($nids)) {
+      wic_pub_order_form_set($form, $form_state, $heading->name, $nids);
+    }
+  }
+
+  // Add the validation function.
+  $form['#validate'] = array('wic_pub_order_form_step_validate');
+
+  return $form;
+}
+
+/**
+ * Form builder: Creates order form elements for publication nodes.
  */
 function wic_pub_order_form_set(&$form, &$form_state, $group, $nids) {
 	foreach ($nids as $nid) {
@@ -114,7 +141,7 @@ function wic_pub_order_form_set(&$form, &$form_state, $group, $nids) {
 			'#maxlength' => 3,
 			// Disable the quantity field if the item is not in stock.
 			'#disabled' => !$in_stock,
-			'#default_value' => empty($form_state['values'][$node->nid]['quantity']) ? '' : $form_state['values'][$node->nid]['quantity'],
+			'#default_value' => empty($form_state['order_object']->items[$node->nid]['quantity']) ? '' : $form_state['order_object']->items[$node->nid]['quantity'],
 		);
 		$form['items'][$group][$node->nid]['printed_order_number'] = array(
 		  '#markup' => $order_number['#markup'],
@@ -146,9 +173,84 @@ function wic_pub_order_form_set(&$form, &$form_state, $group, $nids) {
 }
 
 /**
- * Form builder: publication order form clinic contact info page
+ * Returns HTML for publication node descriptions shown on the order form.
  */
-function wic_pub_order_form_last(&$form, &$form_state) {
+function theme_wic_pub_order_form_description($variables) {
+	$description = $variables['description'];
+	$in_stock = $variables['in_stock'];
+	$max_quantity = $variables['max_quantity'];
+	if (!$in_stock) {
+	  $output = "<span class='line-through'>$description</span> <em>currently out of stock</em>";
+	}
+	elseif ($max_quantity) {
+		$output = "$description <strong>(Limit of $max_quantity)</strong>";
+	}
+	else {
+		$output = $description;
+	}
+	return $output;
+}
+
+/**
+ * Returns HTML for publication nodes in the order form formatted as a table.
+ */
+function theme_wic_pub_order_form_step($variables) {
+	$form = $variables['form'];
+	// Return if we're on the last page.  The clinic info does not get themed.
+	if (isset($form['name'])) {
+		return;
+	}
+
+  $header = array(t('Quantity'), t('Order number'), t('Description'));
+	$output = '';
+  foreach (element_children($form['items']) as $group) {
+		if ($group != 'no_heading') {
+			$output .= '<h3>' . t($group) . "</h3>\n";
+		}
+		$rows = array();
+		foreach (element_children($form['items'][$group]) as $nid) {
+			$row = array();
+			$row['data'][] = drupal_render($form['items'][$group][$nid]['quantity']);
+			$row['data'][] = drupal_render($form['items'][$group][$nid]['printed_order_number']);
+			$row['data'][] = drupal_render($form['items'][$group][$nid]['printed_description']);
+			$rows[] = $row;
+		}
+
+    $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'wic-pub-order-form-table')));
+	}
+	$output .= drupal_render_children($form);
+	return $output;
+}
+
+/**
+ * Form validation handler: Publication order form item selection pages.
+ */
+function wic_pub_order_form_step_validate($form, &$form_state) {
+	foreach ($form_state['values'] as $nid => $item) {
+		if (!is_array($item) || empty($item['quantity'])) {
+			continue;
+		}
+		// Just clear any quantities for items that are not in stock.
+		if (!$item['in_stock']) {
+			$item['quantity'] = '';
+			continue;
+		}
+		// Validate the quantity.
+		if (!is_numeric($item['quantity']) || !is_int((int) $item['quantity'])) {
+			form_set_error("$nid][quantity", t("The quantity you enter must be an integer."));
+			continue;
+		}
+		elseif ($item['max_quantity'] > 0 && $item['quantity'] > $item['max_quantity']) {
+			form_set_error("$nid][quantity", t('The quantity you entered is higher than the maximum.  Refer to the item description for the maximum quantity.'));
+			continue;
+		}
+	}
+}
+
+/**
+ * Form builder: Publication order form clinic contact info page.
+ */
+function wic_pub_order_form_clinic_info($form, &$form_state) {
 	$form['name'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Name'),
@@ -191,83 +293,39 @@ function wic_pub_order_form_last(&$form, &$form_state) {
 		'#required' => TRUE,
 		'#default_value' => empty($form_state['values']['email']) ? '' : $form_state['values']['email'],
 	);
+  return $form;
 }
 
 /**
- * Form validation handler: publication order form item selection pages
+ * Callback executed when the 'next' button is clicked.
  */
-function wic_pub_next_validate($form, &$form_state) {
-	foreach ($form_state['values'] as $nid => $item) {
-		if (!is_array($item) || empty($item['quantity'])) {
-			continue;
-		}
-		// Just clear any quantities for items that are not in stock.
-		if (!$item['in_stock']) {
-			$item['quantity'] = '';
-			continue;
-		}
-		// Validate the quantity.
-		if (!is_numeric($item['quantity']) || !is_int((int) $item['quantity'])) {
-			form_set_error("$nid][quantity", t("The quantity you enter must be an integer."));
-			continue;
-		}
-		elseif ($item['max_quantity'] > 0 && $item['quantity'] > $item['max_quantity']) {
-			form_set_error("$nid][quantity", t('The quantity you entered is higher than the maximum.  Refer to the item description for the maximum quantity.'));
-			continue;
-		}
-	}
+function wic_pub_order_form_next(&$form_state) {
+  // Store submitted data in a ctools cache object.
+  foreach ($form_state['values'] as $nid => $item) {
+    if (is_array($item) && $item['in_stock'] && !empty($item['quantity'])) {
+      $form_state['order_object']->items[$nid] = $item;
+    }
+    elseif (isset($form_state['order_object']->items[$nid])) {
+      // If the quantity was deleted, unset the item value in the order.
+      unset($form_state['order_object']->items[$nid]);
+    }
+  }
+  wic_pub_order_form_set_page_cache('order', $form_state['order_object']);
 }
 
 /**
- * Form submit handler: publication order form back button
+ * Callback executed when the 'cancel' button is clicked.
  */
-function wic_pub_back_submit($form, &$form_state) {
-	$page_num = &$form_state['page_num'];
-	// Store the values from this page.
-	$form_state['pages'][$page_num] = $form_state['values'];
-
-  if ($page_num > 1) {
-		// Set the page number.
-		$page_num--;
-		// Restore the values for the previous page.
-		$form_state['values'] = $form_state['pages'][$page_num];
-	}
-  $form_state['rebuild'] = TRUE;
+function wic_pub_order_form_cancel(&$form_state) {
+  // Clear the ctools cache object.
+  wic_pub_order_form_clear_page_cache('order');
 }
 
 /**
- * Form submit handler: publication order form next button
+ * Callback executed when the entire form submission is finished.
  */
-function wic_pub_next_submit($form, &$form_state) {
-	$page_num = &$form_state['page_num'];
-	// Store the values from this page.
-	$form_state['pages'][$page_num] = $form_state['values'];
-
-	// Set the page number.
-	$page_num++;
-	// Restore the values for the next page, if they exist.
-	if (!empty($form_state['pages'][$page_num])) {
-		$form_state['values'] = $form_state['pages'][$page_num];
-	}
-	else {
-		$form_state['values'] = array();
-	}
-  $form_state['rebuild'] = TRUE;
-}
-
-/**
- * Form submit handler: publication order form
- */
-function wic_pub_order_form_submit($form, &$form_state) {
-	$items = array();
-	foreach ($form_state['pages'] as $page) {
-		foreach ($page as $nid => $item) {
-			// Load each item with a set quantity into $items.
-			if (is_array($item) && $item['in_stock'] && !empty($item['quantity'])) {
-				$items[$nid] = $item;
-			}
-		}
-	}
+function wic_pub_order_form_finish(&$form_state) {
+	$items = $form_state['order_object']->items;
 	// If no items were selected, redirect the user back to the start.
 	if (count($items) == 0) {
 		drupal_set_message(t('You must specify a quantity for at least one publication to submit this form.'));
@@ -284,7 +342,12 @@ function wic_pub_order_form_submit($form, &$form_state) {
 	// Send the order notification email to WIC.
 	drupal_mail('wic_pub', 'order_notice', variable_get('wic_pub_notice_email', 'wichq-sfpd@fns.usda.gov'), 'en', $params);
 	drupal_set_message(t('Thank you for your order! You should receive a confirmation email soon.'));
-	$form_state['redirect'] = '<front>';
+
+  // Clear the Ctool cache object.
+  wic_pub_order_form_clear_page_cache('order');
+
+  // Redirect the user to the front page.
+  drupal_goto('<front>');
 }
 
 /**
@@ -297,4 +360,48 @@ function wic_pub_order_sanitize(&$contact_info) {
 	foreach ($contact_info as $key => $value) {
     $contact_info[$key] = filter_xss($value, array());
 	}
+}
+
+/**
+ * Retreives an object from the cache.
+ *
+ * @param string $name
+ *  The name of the cached object to retreive.
+ */
+function wic_pub_order_form_get_page_cache($name) {
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_get('wic_pub_order_form', $name);
+
+  // If the cached object doesn't exist yet, create an empty object.
+  if (!$cache) {
+    $cache = new stdClass();
+    $cache->locked = ctools_object_cache_test('wic_pub_order_form', $name);
+  }
+
+  return $cache;
+}
+
+/**
+ * Creates or updates an object in the cache.
+ *
+ * @param string $name
+ *  The name of the object to cache.
+ *
+ * @param object $data
+ *  The object to be cached.
+ */
+function wic_pub_order_form_set_page_cache($name, $data) {
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_set('wic_pub_order_form', $name, $data);
+}
+
+/**
+ * Removes an item from the object cache.
+ *
+ * @param string $name
+ *  The name of the object to destroy.
+ */
+function wic_pub_order_form_clear_page_cache($name) {
+  ctools_include('object-cache');
+  ctools_object_cache_clear('wic_pub_order_form', $name);
 }
