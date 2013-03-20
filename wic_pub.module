@@ -22,7 +22,7 @@ function wic_pub_menu() {
     ),
     'admin/wic-forms/order-form' => array(
       'title' => 'Publication order form',
-      'description' => 'Update materials listed in the publication order form',
+      'description' => 'Administration settings for the publication order form',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('wic_pub_admin_settings'),
       'access arguments' => array('access administration pages'),
