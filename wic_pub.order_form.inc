@@ -328,7 +328,7 @@ function wic_pub_order_form_finish(&$form_state) {
 	$items = isset($form_state['order_object']->items) ? $form_state['order_object']->items : array();
 	// If no items were selected, redirect the user back to the start.
 	if (count($items) == 0) {
-		drupal_set_message(t('You must specify a quantity for at least one publication to submit this form.'));
+		drupal_set_message(t('You must specify a quantity for at least one publication to submit this order form.'), 'warning');
 		$form_state['redirect'] = 'publication-order-form';
 		return;
 	}
