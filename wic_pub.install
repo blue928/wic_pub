@@ -28,18 +28,6 @@ function wic_pub_install() {
 }
 
 /**
- * Implements hook_enable()
- */
-function wic_pub_enable() {
-}
-
-/**
- * Implements hook_disable()
- */
-function wic_pub_disable() {
-}
-
-/**
  * Implements hook_uninstall()
  */
 function wic_pub_uninstall() {
