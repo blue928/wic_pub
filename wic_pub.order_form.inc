@@ -91,6 +91,12 @@ function wic_pub_order_form_step($form, &$form_state) {
   $vid = $form_state['vid'];
   $tid = $form_state['tid'];
 
+  // Display this page's term name as a level 2 heading.
+  $name = $form_state['form_info']['order'][$tid];
+  $form['page_name'] = array(
+    '#markup' => '<h2>' . t('@name', array('@name' => $name)) . '</h2>',
+  );
+
   // Get the second-level terms under the page.  These are sub-headings.
   $headings = taxonomy_get_tree($vid, $tid, 1);
 
@@ -196,13 +202,12 @@ function theme_wic_pub_order_form_description($variables) {
  */
 function theme_wic_pub_order_form_step($variables) {
 	$form = $variables['form'];
-	// Return if we're on the last page.  The clinic info does not get themed.
-	if (isset($form['name'])) {
-		return;
-	}
 
+  // Print the form page name.
+	$output = drupal_render($form['page_name']);
+
+  // Print the order form items in a table.
   $header = array(t('Quantity'), t('Order number'), t('Description'));
-	$output = '';
   foreach (element_children($form['items']) as $group) {
 		if ($group != 'no_heading') {
 			$output .= '<h3>' . t($group) . "</h3>\n";
@@ -251,6 +256,9 @@ function wic_pub_order_form_step_validate($form, &$form_state) {
  * Form builder: Publication order form clinic contact info page.
  */
 function wic_pub_order_form_clinic_info($form, &$form_state) {
+  $form['page_name'] = array(
+    '#markup' => '<h2>' . t('Your clinic information') . '</h2>',
+  );
 	$form['name'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Name'),
