@@ -325,11 +325,11 @@ function wic_pub_order_form_cancel(&$form_state) {
  * Callback executed when the entire form submission is finished.
  */
 function wic_pub_order_form_finish(&$form_state) {
-	$items = $form_state['order_object']->items;
+	$items = isset($form_state['order_object']->items) ? $form_state['order_object']->items : array();
 	// If no items were selected, redirect the user back to the start.
 	if (count($items) == 0) {
 		drupal_set_message(t('You must specify a quantity for at least one publication to submit this form.'));
-		$form_state['redirect'] = 'publication_order_form';
+		$form_state['redirect'] = 'publication-order-form';
 		return;
 	}
 
