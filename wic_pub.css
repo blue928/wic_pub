@@ -20,6 +20,9 @@ h3.form-table-heading {
 }
 
 /* Order form table styles */
+#wic-pub-order-form-step table {
+  margin-bottom: 1.25em;
+}
 #wic-pub-order-form-step td {
   padding-top: 4px;
   padding-bottom: 4px;
