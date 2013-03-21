@@ -94,7 +94,7 @@ function wic_pub_order_form_step($form, &$form_state) {
   // Display this page's term name as a level 2 heading.
   $name = $form_state['form_info']['order'][$tid];
   $form['page_name'] = array(
-    '#markup' => '<h2>' . t('@name', array('@name' => $name)) . '</h2>',
+    '#markup' => '<h2 class="form-heading">' . t('@name', array('@name' => $name)) . '</h2>',
   );
 
   // Get the second-level terms under the page.  These are sub-headings.
@@ -210,7 +210,7 @@ function theme_wic_pub_order_form_step($variables) {
   $header = array(t('Quantity'), t('Order number'), t('Description'));
   foreach (element_children($form['items']) as $group) {
 		if ($group != 'no_heading') {
-			$output .= '<h3>' . t($group) . "</h3>\n";
+			$output .= '<h3 class="form-table-heading">' . t($group) . "</h3>\n";
 		}
 		$rows = array();
 		foreach (element_children($form['items'][$group]) as $nid) {
@@ -257,7 +257,7 @@ function wic_pub_order_form_step_validate($form, &$form_state) {
  */
 function wic_pub_order_form_clinic_info($form, &$form_state) {
   $form['page_name'] = array(
-    '#markup' => '<h2>' . t('Your clinic information') . '</h2>',
+    '#markup' => '<h2 class="form-heading">' . t('Your clinic information') . '</h2>',
   );
 	$form['name'] = array(
 		'#type' => 'textfield',

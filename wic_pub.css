@@ -1,6 +1,36 @@
 @charset "utf-8";
 /* CSS Document */
 
+/* Order form step headings */
+#content .block h2.form-heading {
+  background: none;
+  border-bottom: 1px solid #E0E0E0;
+  color: #000000;
+  font-size: 1.5em;
+  line-height: 1.25em;
+  margin: 0.5em 0;
+  padding: 0;
+}
+
+/* Order form table headings */
+h3.form-table-heading {
+  font-size: 1.25em;
+  line-height: 1.25em;
+  margin: 0.5em 0 0;
+}
+
+/* Order form table styles */
+#wic-pub-order-form-step td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+#wic-pub-order-form-step tr.odd td {
+  background-color: #E0E0E0;
+}
+#wic-pub-order-form-step th {
+  padding-left: 0;
+}
+
 /* Full view styles */
 .line-through {
 	text-decoration: line-through;
