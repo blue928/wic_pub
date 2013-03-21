@@ -331,6 +331,9 @@ function wic_pub_order_form_next(&$form_state) {
 function wic_pub_order_form_cancel(&$form_state) {
   // Clear the ctools cache object.
   wic_pub_order_form_clear_page_cache('order');
+
+  // Redirect the user to the front page.
+  drupal_goto('publication-order-form');
 }
 
 /**
