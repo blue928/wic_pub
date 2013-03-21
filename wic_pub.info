@@ -3,6 +3,7 @@ description = Creates the WIC publications node type and an ordering form
 core = 7.x
 package = WIC
 version = 7.x-1.0-beta
+configure = admin/wic-forms/order-form
 
 dependencies[] = ctools
 dependencies[] = list
