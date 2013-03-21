@@ -55,6 +55,10 @@ function wic_pub_order_form($step = NULL) {
     'id' => 'wic_pub_order_form',
     // Specify the path for this form.
     'path' => 'publication-order-form/%step',
+    // Set the Next button text.
+    'next text' => t('Next'),
+    // Set the Finish button text.
+    'finish text' => t('Submit your order'),
     // Show the Back button.
     'show back' => TRUE,
     // Show the Cancel button.
