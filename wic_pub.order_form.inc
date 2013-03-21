@@ -265,7 +265,7 @@ function wic_pub_order_form_clinic_info($form, &$form_state) {
   );
 	$form['name'] = array(
 		'#type' => 'textfield',
-		'#title' => t('Name'),
+		'#title' => t('Your name'),
 		'#maxlength' => 60,
 		'#required' => TRUE,
 		'#default_value' => empty($form_state['values']['name']) ? '' : $form_state['values']['name'],
