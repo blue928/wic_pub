@@ -22,7 +22,7 @@ When an order is submitted through the form two emails are sent: one to the
 email address supplied by the user on the form and another to the WIC staff who
 handles orders.
 
-The module configuration page is located at admin/wic-forms/order-form.
+The module configuration page is located at admin/config/wic-order-form.
 One configuration option is available: the WIC staff email to which order
 information emails will be sent.
 
