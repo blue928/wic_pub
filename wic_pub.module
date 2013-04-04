@@ -82,7 +82,7 @@ function wic_pub_mail($key, &$message, $params) {
     // Order notification for WIC.
     case 'order_notice':
       $message['subject'] = "WIC publications order";
-      $message['body'][] = "An order has been placed for publications on the WICWorks website.";
+      $message['body'][] = "An order has been placed for publications on the WIC Works website.";
       break;
   }
 

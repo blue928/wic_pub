@@ -353,9 +353,9 @@ function wic_pub_order_form_finish(&$form_state) {
 	$params = $form_state['values'];
 	$params['items'] = $items;
 	// Send the order confirmation email to the user.
-	drupal_mail('wic_pub', 'order_confirm', $form_state['values']['email'], 'en', $params);
+	drupal_mail('wic_pub', 'order_confirm', $form_state['values']['email'], 'en', $params, 'wicworks@ars.usda.gov');
 	// Send the order notification email to WIC.
-	drupal_mail('wic_pub', 'order_notice', variable_get('wic_pub_notice_email', 'wichq-sfpd@fns.usda.gov'), 'en', $params);
+	drupal_mail('wic_pub', 'order_notice', variable_get('wic_pub_notice_email', 'wichq-sfpd@fns.usda.gov'), 'en', $params, 'wicworks@ars.usda.gov');
 	drupal_set_message(t('Thank you for your order! You should receive a confirmation email soon.'));
 
   // Clear the Ctool cache object.
