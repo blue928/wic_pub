@@ -38,3 +38,7 @@ h3.form-table-heading {
 .line-through {
 	text-decoration: line-through;
 }
+
+#wic-pub-order-form-table tr th:first-child {
+    min-width: 75px;
+}

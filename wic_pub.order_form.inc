@@ -141,8 +141,30 @@ function wic_pub_order_form_set(&$form, &$form_state, $group, $nids) {
     $max_quantities = field_get_items('node', $node, 'wic_pub_max_quantity');
     $max_quantity = field_view_value('node', $node, 'wic_pub_max_quantity', $max_quantities[0]);
     $max_quantity = (int) $max_quantity['#markup'];
+    
+    // Get thumbnail image
+    $thumbnail_images = field_get_items('node', $node, 'field_wic_pub_thumbnail');
+    $thumbnail_image = field_view_value('node', $node, 'field_wic_pub_thumbnail', $thumbnail_images[0]);
 
 	  $form['items'][$group][$node->nid]['#tree'] = TRUE;
+          
+          // Add thumbnail support - bluepresley Dec 5th 2013
+          
+          if($thumbnail_image['#item']['uri']) {
+              //$thumb = file_create_url($thumbnail_image['#item']['uri']);
+              $thumb = image_style_url('nal_thumbnail', $thumbnail_image['#item']['uri']);
+                $form['items'][$group][$node->nid]['thumbnail'] = array(
+		  '#markup' => '<img src="'.$thumb.'" />',
+		);
+          } 
+          
+//          else {
+//              $thumb = $thumbnail_image['#item']['#default_value']['uri'];
+//              //$thumb = image_style_url('nal_thumbnail', $thumbnail_image['#item']['uri']);
+//                $form['items'][$group][$node->nid]['thumbnail'] = array(
+//		  '#markup' => '<img width="70px" height="70px" src="'.variable_get('file_public_path', conf_path() . '/files').'/default_images/transparent-image.png" />',
+//		);
+//          }
 		$form['items'][$group][$node->nid]['quantity'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Quantity'),
@@ -186,6 +208,7 @@ function wic_pub_order_form_set(&$form, &$form_state, $group, $nids) {
  * Returns HTML for publication node descriptions shown on the order form.
  */
 function theme_wic_pub_order_form_description($variables) {
+        
 	$description = $variables['description'];
 	$in_stock = $variables['in_stock'];
 	$max_quantity = $variables['max_quantity'];
@@ -211,7 +234,7 @@ function theme_wic_pub_order_form_step($variables) {
 	$output = drupal_render($form['page_name']);
 
   // Print the order form items in a table.
-  $header = array(t('Quantity'), t('Order number'), t('Description'));
+  $header = array(t('Thumbnail'), t('Quantity'), t('Order number'), t('Description'));
   foreach (element_children($form['items']) as $group) {
 		if ($group != 'no_heading') {
 			$output .= '<h3 class="form-table-heading">' . t($group) . "</h3>\n";
@@ -219,6 +242,8 @@ function theme_wic_pub_order_form_step($variables) {
 		$rows = array();
 		foreach (element_children($form['items'][$group]) as $nid) {
 			$row = array();
+                        
+                        $row['data'][] = drupal_render($form['items'][$group][$nid]['thumbnail']);
 			$row['data'][] = drupal_render($form['items'][$group][$nid]['quantity']);
 			$row['data'][] = drupal_render($form['items'][$group][$nid]['printed_order_number']);
 			$row['data'][] = drupal_render($form['items'][$group][$nid]['printed_description']);
