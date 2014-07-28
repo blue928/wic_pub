@@ -234,7 +234,7 @@ function theme_wic_pub_order_form_step($variables) {
 	$output = drupal_render($form['page_name']);
 
   // Print the order form items in a table.
-  $header = array(t('Thumbnail'), t('Quantity'), t('Order number'), t('Description'));
+  $header = array(t(''), t('Quantity'), t('Order number'), t('Description'));
   foreach (element_children($form['items']) as $group) {
 		if ($group != 'no_heading') {
 			$output .= '<h3 class="form-table-heading">' . t($group) . "</h3>\n";
