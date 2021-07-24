@@ -9,8 +9,7 @@ CONTENTS OF THIS FILE
 INTRODUCTION
 ------------
 
-Current maintainer: David Cameron
-Original author: David Cameron <david.a.cameron@sbcglobal.net>
+Current maintainer: Blue Presley
 
 The Publication Order Form module was created for the WIC office at NAL.  It
 creates a new node type named WIC Publication, a taxonomy vocabulary named
